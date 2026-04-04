@@ -1,0 +1,403 @@
+{
+  "info": {
+    "_postman_id": "f1631cf0-b93d-4af8-8ff1-e09579dc5b18",
+    "name": "Blacklist API - Lista Negra Global de Emails",
+    "description": "API REST para el microservicio de Lista Negra Global de Emails. Permite agregar emails a una lista negra global y consultar si un email se encuentra en dicha lista. Todos los endpoints protegidos requieren un Bearer Token en el header Authorization.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "32594999"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "health"
+          ]
+        },
+        "description": "Endpoint de salud que permite verificar si el microservicio está activo y respondiendo correctamente. No requiere autenticación."
+      },
+      "response": [
+        {
+          "name": "Servicio activo - 200 OK",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [],
+          "cookie": [],
+          "body": "{\"status\": \"ok\"}"
+        }
+      ]
+    },
+    {
+      "name": "Agregar email a lista negra",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"usuario@ejemplo.com\",\n  \"app_uuid\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"blocked_reason\": \"Actividad sospechosa detectada\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/blacklists",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "blacklists"
+          ]
+        },
+        "description": "Agrega un email a la lista negra global de la organización. Requiere Bearer Token. Parámetros: email (String, obligatorio), app_uuid (UUID String, obligatorio), blocked_reason (String, opcional, máximo 255 caracteres). El microservicio registra internamente la dirección IP del solicitante y la fecha/hora de creación."
+      },
+      "response": [
+        {
+          "name": "Email agregado exitosamente - 201",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"fraude@ejemplo.com\",\n  \"app_uuid\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"blocked_reason\": \"Actividad sospechosa detectada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/blacklists",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "blacklists"
+              ]
+            }
+          },
+          "status": "Created",
+          "code": 201,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json",
+              "description": "",
+              "enabled": true
+            }
+          ],
+          "cookie": [],
+          "body": "{\"message\": \"Email agregado a la lista negra exitosamente\"}"
+        },
+        {
+          "name": "Email sin motivo (campo opcional) - 201",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"spam@ejemplo.com\",\n  \"app_uuid\": \"550e8400-e29b-41d4-a716-446655440001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/blacklists",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "blacklists"
+              ]
+            }
+          },
+          "status": "Created",
+          "code": 201,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json",
+              "description": "",
+              "enabled": true
+            }
+          ],
+          "cookie": [],
+          "body": "{\"message\": \"Email agregado a la lista negra exitosamente\"}"
+        },
+        {
+          "name": "Email duplicado - 400",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"fraude@ejemplo.com\",\n  \"app_uuid\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"blocked_reason\": \"Intento duplicado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/blacklists",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "blacklists"
+              ]
+            }
+          },
+          "status": "Bad Request",
+          "code": 400,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json",
+              "description": "",
+              "enabled": true
+            }
+          ],
+          "cookie": [],
+          "body": "{\"message\": \"El email ya se encuentra en la lista negra\"}"
+        },
+        {
+          "name": "Sin token de autorización - 401",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"fraude@ejemplo.com\",\n  \"app_uuid\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"blocked_reason\": \"Actividad sospechosa detectada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/blacklists",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "blacklists"
+              ]
+            }
+          },
+          "status": "Unauthorized",
+          "code": 401,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json",
+              "description": "",
+              "enabled": true
+            }
+          ],
+          "cookie": [],
+          "body": "{\"message\": \"Token de autorización faltante\"}"
+        }
+      ]
+    },
+    {
+      "name": "Consultar email en lista negra",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/blacklists/:email",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "blacklists",
+            ":email"
+          ],
+          "variable": [
+            {
+              "key": "email",
+              "value": "usuario@ejemplo.com"
+            }
+          ]
+        },
+        "description": "Consulta si un email específico se encuentra en la lista negra global de la organización. Retorna un booleano indicando si está o no en la lista negra, y el motivo por el que fue agregado. Requiere Bearer Token. El email se pasa como parámetro en la URL."
+      },
+      "response": [
+        {
+          "name": "Email encontrado en lista negra - 200",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/blacklists/fraude@ejemplo.com",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "blacklists",
+                "fraude@ejemplo.com"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [],
+          "cookie": [],
+          "body": "{\"blacklisted\": true, \"blocked_reason\": \"Actividad sospechosa detectada\"}"
+        },
+        {
+          "name": "Email NO está en lista negra - 200",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/blacklists/limpio@ejemplo.com",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "blacklists",
+                "limpio@ejemplo.com"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [],
+          "cookie": [],
+          "body": "{\"blacklisted\": false}"
+        },
+        {
+          "name": "Sin token de autorización - 401",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/blacklists/fraude@ejemplo.com",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "blacklists",
+                "fraude@ejemplo.com"
+              ]
+            }
+          },
+          "status": "Unauthorized",
+          "code": 401,
+          "_postman_previewlanguage": "json",
+          "header": [],
+          "cookie": [],
+          "body": "{\"message\": \"Token de autorización faltante\"}"
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc3NTI4NTc0OCwianRpIjoiNDhhYmE5MjYtZWE1OC00OTBjLThlZTktNTY0ZDVlZTZiNTgyIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6ImFwaS1jbGllbnQiLCJuYmYiOjE3NzUyODU3NDh9.f3I-DkP3JqCFynRLLUB2zCB3nEXQjo3NAai_vQxUqIc",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000"
+    },
+    {
+      "key": "email",
+      "value": "fraude@ejemplo.com"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ]
+}
