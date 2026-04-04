@@ -1,11 +1,8 @@
 """Modelos de datos para la lista negra global de emails."""
 
-from datetime import datetime
-import uuid
-
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func, text
 from sqlalchemy.dialects.postgresql import UUID
-
 
 db = SQLAlchemy()
 
@@ -15,9 +12,16 @@ class Blacklist(db.Model):
 
     __tablename__ = "blacklists"
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+    )
     email = db.Column(db.String(255), unique=True, nullable=False, index=True)
-    app_uuid = db.Column(UUID(as_uuid=True), nullable=False, default=uuid.uuid4)
+    app_uuid = db.Column(UUID(as_uuid=True), nullable=False)
     blocked_reason = db.Column(db.String(255), nullable=True)
-    ip_address = db.Column(db.String(45), nullable=True)
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    ip_address = db.Column(db.String(45), nullable=False)
+    created_at = db.Column(
+        db.DateTime(timezone=True),
+        server_default=func.now(),
+    )
