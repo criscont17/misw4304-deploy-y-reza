@@ -22,5 +22,8 @@ Flask-RESTful==0.3.9
 Flask-JWT-Extended==4.3.1
 PyJWT==2.3.0
 
+# Servidor WSGI
+gunicorn==20.1.0
+
 # Utilidades
 python-dotenv==0.19.2
