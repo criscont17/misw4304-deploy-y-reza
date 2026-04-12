@@ -1,15 +1,11 @@
-"""Punto de entrada de la aplicación Flask."""
+"""Aplicación Flask: factory y registro de extensiones y rutas."""
 
 from flask import Flask, jsonify
-from flask_jwt_extended import JWTManager
 from flask_restful import Api
 
-from config import Config
-from models import db
-from resources import BlacklistDetailResource, BlacklistResource
-from schemas import ma
-
-jwt = JWTManager()
+from app.api.blacklist_resources import BlacklistDetailResource, BlacklistResource
+from app.config import Config
+from app.extensions import db, jwt, ma
 
 
 def create_app(config_class=Config):
@@ -29,6 +25,11 @@ def create_app(config_class=Config):
     def health_check():
         return {"status": "ok"}, 200
 
+    with app.app_context():
+        from app.models import Blacklist  # noqa: F401
+
+        db.create_all()
+
     return app
 
 
@@ -45,11 +46,3 @@ def invalid_token_callback(error_string):
 @jwt.expired_token_loader
 def expired_token_callback(jwt_header, jwt_payload):
     return jsonify({"message": "El token ha expirado"}), 401
-
-
-app = create_app()
-with app.app_context():
-    db.create_all()
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
