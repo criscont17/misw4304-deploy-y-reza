@@ -1,10 +1,9 @@
-"""Modelos de datos para la lista negra global de emails."""
+"""Modelo de datos para la lista negra global de emails."""
 
-from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func, text
 from sqlalchemy.dialects.postgresql import UUID
 
-db = SQLAlchemy()
+from app.extensions import db
 
 
 class Blacklist(db.Model):

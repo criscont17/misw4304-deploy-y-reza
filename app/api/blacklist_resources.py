@@ -5,10 +5,11 @@ from flask_jwt_extended import jwt_required
 from flask_restful import Resource
 from marshmallow import ValidationError
 
-from models import Blacklist, db
-from schemas import BlacklistCreateSchema
+from app.schemas import BlacklistCreateSchema
+from app.services import BlacklistService
 
 create_schema = BlacklistCreateSchema()
+_service = BlacklistService()
 
 
 class BlacklistResource(Resource):
@@ -26,20 +27,13 @@ class BlacklistResource(Resource):
         except ValidationError as err:
             return {"message": "Errores de validación", "errors": err.messages}, 400
 
-        existing = Blacklist.query.filter_by(email=data["email"]).first()
-        if existing:
-            return {"message": "El email ya se encuentra en la lista negra"}, 400
-
-        entry = Blacklist(
+        body, status = _service.add_email(
             email=data["email"],
             app_uuid=data["app_uuid"],
             blocked_reason=data.get("blocked_reason"),
             ip_address=request.remote_addr or "0.0.0.0",
         )
-        db.session.add(entry)
-        db.session.commit()
-
-        return {"message": "Email agregado a la lista negra exitosamente"}, 201
+        return body, status
 
 
 class BlacklistDetailResource(Resource):
@@ -48,12 +42,5 @@ class BlacklistDetailResource(Resource):
     @jwt_required()
     def get(self, email):
         """Consulta si un email está en la lista negra global."""
-        entry = Blacklist.query.filter_by(email=email).first()
-
-        if entry:
-            return {
-                "blacklisted": True,
-                "blocked_reason": entry.blocked_reason or "",
-            }, 200
-
-        return {"blacklisted": False}, 200
+        body, status = _service.get_status(email)
+        return body, status

@@ -2,11 +2,8 @@
 
 from marshmallow import fields, validate
 
-from flask_marshmallow import Marshmallow
-
-from models import Blacklist
-
-ma = Marshmallow()
+from app.extensions import ma
+from app.models import Blacklist
 
 
 class BlacklistSchema(ma.SQLAlchemyAutoSchema):
