@@ -1,176 +1,112 @@
-# # misw4304-deploy-y-reza Blacklist API - Lista Negra Global de Emails
+# Blacklist API — lista negra global de emails
 
-Microservicio REST para gestionar una lista negra global de emails. Permite agregar emails a la lista negra y consultar si un email se encuentra bloqueado.
+**misw4304-deploy-y-reza** es un microservicio REST para registrar y consultar emails en una lista negra global. Está pensado para el curso **MISO / DevOps**, con despliegue manual en **AWS** (Elastic Beanstalk) y persistencia en **PostgreSQL**.
 
-## Tecnologías
+**Stack:** Python 3.8+, Flask 3.x, Flask-RESTful, SQLAlchemy, Marshmallow, JWT (Bearer). Las versiones concretas están en `requirements.txt`.
 
-- Python 3.8+
-- Flask 1.1.4 + Flask-RESTful
-- Flask-SQLAlchemy + PostgreSQL (Supabase)
-- Flask-Marshmallow (validación y serialización)
-- Flask-JWT-Extended (autenticación Bearer Token)
-
-## Requisitos previos
-
-- Python 3.8 o superior
-- PostgreSQL (local o Supabase)
-- pip
-
-## Instalación y ejecución local
-
-### 1. Crear y activar entorno virtual
+## Inicio rápido
 
 ```bash
 python -m venv venv
-```
-
-Windows (PowerShell):
-
-```powershell
-.\venv\Scripts\Activate.ps1
-```
-
-Linux/macOS:
-
-```bash
-source venv/bin/activate
-```
-
-### 2. Instalar dependencias
-
-```bash
+source venv/bin/activate    # Windows: .\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
 
-### 3. Configurar variables de entorno
-
-Crear un archivo `.env` en la raíz del proyecto:
-
-```env
-JWT_SECRET_KEY=tu-clave-secreta-aqui
-DATABASE_URL=postgresql://usuario:contraseña@host:puerto/nombre_db
-```
-
-`DATABASE_URL` apunta a la base de datos principal (por ejemplo, Supabase). Si no se define, se usa `SQLALCHEMY_DATABASE_URI` como fallback para desarrollo local.
-
-### 4. Ejecutar la aplicación
+Crea un `.env` en la raíz con al menos `JWT_SECRET_KEY` y `DATABASE_URL` (PostgreSQL). Si omites `DATABASE_URL`, existe un valor por defecto solo para desarrollo local.
 
 ```bash
-python app.py
+python wsgi.py
 ```
 
-El servidor arranca en `http://localhost:5000`.
+Servidor por defecto en `http://127.0.0.1:5000`. Alternativa: `flask --app wsgi run`.
 
-## Despliegue en producción (AWS Elastic Beanstalk)
+## Stack y requisitos
 
-Al crear el entorno en Elastic Beanstalk y subir el `.zip` del proyecto, configurar el **start command**:
+- **Python** 3.8 o superior y **pip**
+- **PostgreSQL** (local, RDS u otro proveedor)
+- Dependencias: `requirements.txt`
 
-```
-gunicorn -w 4 -b 0.0.0.0:8000 app:app
-```
+## Despliegue (AWS Elastic Beanstalk)
 
-Gunicorn ya está incluido en `requirements.txt`. Elastic Beanstalk usa el puerto **8000** por defecto.
+Resumen:
 
-Configurar las variables de entorno (`DATABASE_URL`, `JWT_SECRET_KEY`) desde la consola de AWS en **Configuration > Software > Environment properties**.
+- Incluye en el paquete **`.ebextensions/`** y **`wsgi.py`**; el contenedor usa `WSGIPath: wsgi:app` (ver `.ebextensions/app.config`).
+- Define **`DATABASE_URL`** y **`JWT_SECRET_KEY`** en **Configuration → Software → Environment properties**.
 
-## Endpoints
+Guía un poco más detallada (WSGI, zip, variables, health, Gunicorn): **[docs/elastic-beanstalk.md](docs/elastic-beanstalk.md)**.
 
-Todos los endpoints protegidos requieren el header `Authorization: Bearer <token>`.
+Comando de referencia si usas Gunicorn manualmente:
 
-### Health Check
-
-```
-GET /health
-```
-
-No requiere autenticación. Respuesta:
-
-```json
-{"status": "ok"}
+```bash
+gunicorn -w 4 -b 0.0.0.0:8000 wsgi:app
 ```
 
-### Agregar email a la lista negra
+## Documentación en `docs/`
 
-```
-POST /blacklists
-```
+| Recurso | Descripción |
+|---------|-------------|
+| [docs/elastic-beanstalk.md](docs/elastic-beanstalk.md) | Elastic Beanstalk y este repositorio |
+| Colección Postman (`docs/blacklist-api.postman_collection.json`) | Requests de ejemplo, precondiciones en la descripción de la colección |
 
-Headers:
+## API (resumen)
 
-```
-Authorization: Bearer <token>
-Content-Type: application/json
-```
+Los endpoints de negocio requieren `Authorization: Bearer <token>`. Detalle de códigos y ejemplos: **Postman** en `docs/`.
 
-Body:
+| Método | Ruta | Auth | Descripción |
+|--------|------|------|-------------|
+| `GET` | `/health` | No | Estado del servicio (`{"status": "ok"}`) |
+| `POST` | `/blacklists` | Sí | Alta de email (`email`, `app_uuid`, `blocked_reason` opcional ≤255) |
+| `GET` | `/blacklists/<email>` | Sí | Indica si está listado y el motivo |
+
+Ejemplo mínimo de cuerpo para `POST /blacklists`:
 
 ```json
 {
   "email": "usuario@ejemplo.com",
   "app_uuid": "550e8400-e29b-41d4-a716-446655440000",
-  "blocked_reason": "Motivo opcional (máx. 255 caracteres)"
+  "blocked_reason": "Opcional"
 }
 ```
 
-| Campo | Tipo | Requerido | Descripción |
-|-------|------|-----------|-------------|
-| email | String | Sí | Email a bloquear |
-| app_uuid | UUID | Sí | ID de la aplicación cliente |
-| blocked_reason | String | No | Motivo del bloqueo (máx. 255 chars) |
-
-Respuestas:
-
-- `201` - Email agregado exitosamente
-- `400` - Email duplicado o datos inválidos
-- `401` - Token faltante o inválido
-
-### Consultar email en la lista negra
-
-```
-GET /blacklists/<email>
-```
-
-Headers:
-
-```
-Authorization: Bearer <token>
-```
-
-Respuestas:
-
-- `200` si está en la lista negra:
-
-```json
-{"blacklisted": true, "blocked_reason": "Motivo del bloqueo"}
-```
-
-- `200` si no está:
-
-```json
-{"blacklisted": false}
-```
-
-- `401` - Token faltante o inválido
-
-## Generar un token JWT
+## Generar un token JWT (pruebas)
 
 Con el entorno virtual activado:
 
 ```bash
-python -c "from app import create_app; from flask_jwt_extended import create_access_token; app = create_app(); app.app_context().push(); print(create_access_token(identity='api-client', expires_delta=False))"
+python -c "
+from app import create_app
+from flask_jwt_extended import create_access_token
+app = create_app()
+app.app_context().push()
+print(create_access_token(identity='api-client', expires_delta=False))
+"
 ```
 
-El parámetro `expires_delta=False` genera un token sin expiración.
+`expires_delta=False` evita expiración; úsalo solo en entornos de prueba.
 
 ## Estructura del proyecto
 
+Organización por capas: recursos HTTP delgados (`app/api`), lógica en servicios (`app/services`), modelo y esquemas aparte.
+
 ```
-├── app.py              # App Factory y punto de entrada
-├── config.py           # Configuración desde variables de entorno
-├── models.py           # Modelo Blacklist (SQLAlchemy)
-├── schemas.py          # Schemas de validación (Marshmallow)
-├── resources.py        # Endpoints REST
-├── requirements.txt    # Dependencias pinneadas
-├── .env                # Variables de entorno (no versionado)
+├── wsgi.py
+├── app/
+│   ├── __init__.py
+│   ├── config.py
+│   ├── extensions.py
+│   ├── api/
+│   ├── services/
+│   ├── models/
+│   └── schemas/
+├── docs/                    # Postman, guía EB
+├── .ebextensions/
+├── requirements.txt
+├── LICENSE
 └── README.md
 ```
+
+El archivo `.env` no se versiona (ver `.gitignore`).
+
+## Licencia
+
+Ver el archivo `LICENSE` en la raíz del repositorio.
