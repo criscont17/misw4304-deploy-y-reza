@@ -34,7 +34,11 @@ Si defines `STATIC_BEARER_TOKEN` en `.env`, usa ese valor en el header en su lug
 
 - **Python** 3.8 o superior y **pip**
 - **PostgreSQL** (local, RDS u otro proveedor)
-- Dependencias: `requirements.txt`
+- Dependencias: `requirements.txt` (incluye `pytest` para las pruebas unitarias).
+
+## Pruebas unitarias
+
+Tras `pip install -r requirements.txt`, ejecuta **`pytest tests/ -v`**. Los tests **mockean** el servicio de lista negra y no requieren PostgreSQL.
 
 ## Despliegue (AWS Elastic Beanstalk)
 
@@ -109,8 +113,10 @@ Organización por capas: recursos HTTP delgados (`app/api`), lógica en servicio
 │   ├── services/
 │   ├── models/
 │   └── schemas/
-├── docs/                    # Postman, guía EB (+ Bearer)
+├── tests/                   # Pytest (mocks; sin PostgreSQL)
+├── docs/                    # Postman, guía EB
 ├── .ebextensions/
+├── pytest.ini
 ├── requirements.txt
 ├── LICENSE
 └── README.md

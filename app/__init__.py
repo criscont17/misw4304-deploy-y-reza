@@ -28,6 +28,7 @@ def create_app(config_class=Config):
     with app.app_context():
         from app.models import Blacklist  # noqa: F401
 
-        db.create_all()
+        if not app.config.get("SKIP_DB_CREATE_ALL"):
+            db.create_all()
 
     return app

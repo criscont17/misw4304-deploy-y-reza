@@ -33,6 +33,8 @@ def _static_bearer_token_from_env() -> Optional[str]:
 class Config:
     """Configuración base cargada desde variables de entorno."""
 
+    #: Si es True, `create_app` no ejecuta `db.create_all()` (pruebas unitarias sin DDL).
+    SKIP_DB_CREATE_ALL = False
     SQLALCHEMY_DATABASE_URI = (
         _env_stripped("DATABASE_URL")
         or _env_stripped("SQLALCHEMY_DATABASE_URI")
@@ -42,3 +44,13 @@ class Config:
     PROPAGATE_EXCEPTIONS = True
     JWT_SECRET_KEY = _env_stripped("JWT_SECRET_KEY") or "change-me"
     STATIC_BEARER_TOKEN = _static_bearer_token_from_env()
+
+
+class TestingConfig(Config):
+    """Configuración para pruebas: sin crear esquema en BD; URI dummy para SQLAlchemy."""
+
+    TESTING = True
+    SKIP_DB_CREATE_ALL = True
+    SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+    JWT_SECRET_KEY = "test-jwt-secret-key"
+    STATIC_BEARER_TOKEN = "test-static-bearer-token"

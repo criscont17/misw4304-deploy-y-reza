@@ -7,7 +7,7 @@ from typing import Any, Callable, Optional, Tuple
 from flask import current_app, request
 from flask_jwt_extended import verify_jwt_in_request
 from flask_jwt_extended.exceptions import JWTExtendedException
-from jwt.exceptions import ExpiredSignatureError
+from jwt.exceptions import ExpiredSignatureError, PyJWTError
 
 
 def _parse_bearer_token() -> Tuple[Optional[str], Optional[str]]:
@@ -53,7 +53,7 @@ def bearer_auth_required(fn: Callable[..., Any]) -> Callable[..., Any]:
             verify_jwt_in_request()
         except ExpiredSignatureError:
             return {"message": "El token ha expirado"}, 401
-        except JWTExtendedException:
+        except (JWTExtendedException, PyJWTError):
             return {"message": "Token inválido o expirado"}, 401
 
         return fn(*args, **kwargs)
