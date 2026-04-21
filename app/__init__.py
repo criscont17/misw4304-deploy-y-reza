@@ -1,6 +1,6 @@
 """Aplicación Flask: factory y registro de extensiones y rutas."""
 
-from flask import Flask, jsonify
+from flask import Flask
 from flask_restful import Api
 
 from app.api.blacklist_resources import BlacklistDetailResource, BlacklistResource
@@ -31,18 +31,3 @@ def create_app(config_class=Config):
         db.create_all()
 
     return app
-
-
-@jwt.unauthorized_loader
-def missing_token_callback(error_string):
-    return jsonify({"message": "Token de autorización faltante"}), 401
-
-
-@jwt.invalid_token_loader
-def invalid_token_callback(error_string):
-    return jsonify({"message": "Token inválido o expirado"}), 401
-
-
-@jwt.expired_token_loader
-def expired_token_callback(jwt_header, jwt_payload):
-    return jsonify({"message": "El token ha expirado"}), 401

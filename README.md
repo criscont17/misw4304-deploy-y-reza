@@ -2,7 +2,7 @@
 
 **misw4304-deploy-y-reza** es un microservicio REST para registrar y consultar emails en una lista negra global. Está pensado para el curso **MISO / DevOps**, con despliegue manual en **AWS** (Elastic Beanstalk) y persistencia en **PostgreSQL**.
 
-**Stack:** Python 3.8+, Flask 3.x, Flask-RESTful, SQLAlchemy, Marshmallow, JWT (Bearer). Las versiones concretas están en `requirements.txt`.
+**Stack:** Python 3.8+, Flask 3.x, Flask-RESTful, SQLAlchemy, Marshmallow, autenticación **Bearer** (token estático opcional o JWT). Las versiones concretas están en `requirements.txt`.
 
 ## Inicio rápido
 
@@ -12,13 +12,23 @@ source venv/bin/activate    # Windows: .\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
 
-Crea un `.env` en la raíz con al menos `JWT_SECRET_KEY` y `DATABASE_URL` (PostgreSQL). Si omites `DATABASE_URL`, existe un valor por defecto solo para desarrollo local.
+Crea un `.env` en la raíz con al menos `DATABASE_URL` (PostgreSQL). Opcional: `JWT_SECRET_KEY` y `STATIC_BEARER_TOKEN` (Bearer estático o solo JWT; ver **[docs/elastic-beanstalk.md](docs/elastic-beanstalk.md)**).
 
 ```bash
 python wsgi.py
 ```
 
 Servidor por defecto en `http://127.0.0.1:5000`. Alternativa: `flask --app wsgi run`.
+
+### Token Bearer estático (pruebas locales)
+
+Si **no** defines `STATIC_BEARER_TOKEN` en `.env`, la API usa por defecto el token fijo `misw4304-static-bearer`. Para `POST /blacklists` y `GET /blacklists/<email>` incluye el header:
+
+```http
+Authorization: Bearer misw4304-static-bearer
+```
+
+Si defines `STATIC_BEARER_TOKEN` en `.env`, usa ese valor en el header en su lugar. Si la variable existe pero está vacía (solo espacios), el modo estático se desactiva y solo se aceptan JWT; detalle en **[docs/elastic-beanstalk.md](docs/elastic-beanstalk.md)**. La colección Postman en `docs/blacklist-api.postman_collection.json` trae la variable `token` con el mismo valor por defecto.
 
 ## Stack y requisitos
 
@@ -31,9 +41,9 @@ Servidor por defecto en `http://127.0.0.1:5000`. Alternativa: `flask --app wsgi 
 Resumen:
 
 - Incluye en el paquete **`.ebextensions/`** y **`wsgi.py`**; el contenedor usa `WSGIPath: wsgi:app` (ver `.ebextensions/app.config`).
-- Define **`DATABASE_URL`** y **`JWT_SECRET_KEY`** en **Configuration → Software → Environment properties**.
+- Define **`DATABASE_URL`**, **`JWT_SECRET_KEY`** y **`STATIC_BEARER_TOKEN`** según necesites (Bearer estático y/o JWT; ver **[docs/elastic-beanstalk.md](docs/elastic-beanstalk.md)**) en **Configuration → Software → Environment properties**.
 
-Guía un poco más detallada (WSGI, zip, variables, health, Gunicorn): **[docs/elastic-beanstalk.md](docs/elastic-beanstalk.md)**.
+Guía (WSGI, zip, variables, health, Gunicorn, Bearer): **[docs/elastic-beanstalk.md](docs/elastic-beanstalk.md)**.
 
 Comando de referencia si usas Gunicorn manualmente:
 
@@ -45,12 +55,12 @@ gunicorn -w 4 -b 0.0.0.0:8000 wsgi:app
 
 | Recurso | Descripción |
 |---------|-------------|
-| [docs/elastic-beanstalk.md](docs/elastic-beanstalk.md) | Elastic Beanstalk y este repositorio |
-| Colección Postman (`docs/blacklist-api.postman_collection.json`) | Requests de ejemplo, precondiciones en la descripción de la colección |
+| [docs/elastic-beanstalk.md](docs/elastic-beanstalk.md) | Elastic Beanstalk, variables de entorno y autenticación Bearer (estático / JWT) |
+| Colección Postman (`docs/blacklist-api.postman_collection.json`) | Requests de ejemplo, variable `token` por defecto alineada con el Bearer estático |
 
 ## API (resumen)
 
-Los endpoints de negocio requieren `Authorization: Bearer <token>`. Detalle de códigos y ejemplos: **Postman** en `docs/`.
+Los endpoints de negocio requieren `Authorization: Bearer <token>` (**estático** o **JWT**; token estático por defecto en **Token Bearer estático** más arriba; despliegue y variables: **[docs/elastic-beanstalk.md](docs/elastic-beanstalk.md)**). Códigos y ejemplos: **Postman** en `docs/`.
 
 | Método | Ruta | Auth | Descripción |
 |--------|------|------|-------------|
@@ -68,7 +78,7 @@ Ejemplo mínimo de cuerpo para `POST /blacklists`:
 }
 ```
 
-## Generar un token JWT (pruebas)
+## Generar un token JWT (opcional)
 
 Con el entorno virtual activado:
 
@@ -92,13 +102,14 @@ Organización por capas: recursos HTTP delgados (`app/api`), lógica en servicio
 ├── wsgi.py
 ├── app/
 │   ├── __init__.py
+│   ├── auth.py
 │   ├── config.py
 │   ├── extensions.py
 │   ├── api/
 │   ├── services/
 │   ├── models/
 │   └── schemas/
-├── docs/                    # Postman, guía EB
+├── docs/                    # Postman, guía EB (+ Bearer)
 ├── .ebextensions/
 ├── requirements.txt
 ├── LICENSE
