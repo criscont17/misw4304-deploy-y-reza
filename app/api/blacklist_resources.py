@@ -1,10 +1,10 @@
 """Recursos REST para la API de lista negra."""
 
 from flask import request
-from flask_jwt_extended import jwt_required
 from flask_restful import Resource
 from marshmallow import ValidationError
 
+from app.auth import bearer_auth_required
 from app.schemas import BlacklistCreateSchema
 from app.services import BlacklistService
 
@@ -15,7 +15,7 @@ _service = BlacklistService()
 class BlacklistResource(Resource):
     """Maneja operaciones sobre la colección de lista negra."""
 
-    @jwt_required()
+    @bearer_auth_required
     def post(self):
         """Agrega un email a la lista negra global."""
         json_data = request.get_json(silent=True)
@@ -39,7 +39,7 @@ class BlacklistResource(Resource):
 class BlacklistDetailResource(Resource):
     """Maneja operaciones sobre un email específico en la lista negra."""
 
-    @jwt_required()
+    @bearer_auth_required
     def get(self, email):
         """Consulta si un email está en la lista negra global."""
         body, status = _service.get_status(email)
