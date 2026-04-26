@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "f1631cf0-b93d-4af8-8ff1-e09579dc5b18",
     "name": "Blacklist API",
-    "description": "## Precondiciones\n\n1. **PostgreSQL** accesible y misma `DATABASE_URL` (o `SQLALCHEMY_DATABASE_URI`) que usa la API.\n2. **`JWT_SECRET_KEY`** idéntica al generar el token y al arrancar el servicio.\n3. Variables de colección: **`base_url`** (por ejemplo `http://127.0.0.1:5000`) y **`token`**: pega un JWT válido (comando en el `README.md`, sección «Generar un token JWT»).\n4. Flujo sugerido: `GET /health` → `POST /blacklists` con un email nuevo → `GET /blacklists/:email` → casos de error.\n\n**Autenticación:** la carpeta **Lista negra** hereda **Bearer {{token}}** de la colección. La carpeta **401 — sin autenticación** fuerza **sin auth** para reproducir 401 al pulsar Enviar.\n\n## Recursos\n\nAlta y consulta de emails en lista negra global. Respuesta de consulta: campos `blacklisted` y `blocked_reason`.",
+    "description": "## Precondiciones\n\n1. **PostgreSQL** accesible y misma `DATABASE_URL` (o `SQLALCHEMY_DATABASE_URI`) que usa la API.\n2. **Autenticación:** la variable de colección **`token`** se envía como `Bearer {{token}}`. Por defecto es el **token estático** `misw4304-static-bearer` (válido con la configuración por defecto del servidor). Para usar **JWT**, sustituye `token` por un access token generado con la misma `JWT_SECRET_KEY` que el servicio (ver `README.md` y `docs/elastic-beanstalk.md`).\n3. **`base_url`**, por ejemplo `http://127.0.0.1:5000`.\n4. Flujo sugerido: `GET /health` → `POST /blacklists` con un email nuevo → `GET /blacklists/:email` → casos de error.\n\n**Carpetas:** **Lista negra** hereda **Bearer {{token}}**. **401 — sin autenticación** usa **sin auth** para reproducir 401 al enviar.\n\n## Recursos\n\nAlta y consulta de emails en lista negra global. Respuesta de consulta: campos `blacklisted` y `blocked_reason`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -594,7 +594,7 @@
     },
     {
       "key": "token",
-      "value": ""
+      "value": "misw4304-static-bearer"
     }
   ]
 }

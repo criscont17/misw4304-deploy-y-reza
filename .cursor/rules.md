@@ -5,7 +5,7 @@
 - Siempre priorizar el contexto de la entrega activa sobre reglas globales `.cursor/rules/global`.
 
 ## Entrega activa
-ENTREGA 1
+ENTREGA 2
 
 ## Prioridades
 1. Simpre espera confirmación de usuario antes de ejecutar la tarea.
