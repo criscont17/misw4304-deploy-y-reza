@@ -19,7 +19,7 @@ def test_post_blacklist_success_201(client, auth_headers, valid_body):
     with patch("app.api.blacklist_resources._service") as mock_svc:
         mock_svc.add_email.return_value = (
             {"message": "Email agregado a la lista negra exitosamente"},
-            201,
+            200,
         )
         resp = client.post(
             "/blacklists",
