@@ -3,7 +3,8 @@ version: 0.2
 env:
   variables:
     AWS_DEFAULT_REGION: us-east-1
-    AWS_ACCOUNT_ID: "635858937828"
+    # Diligenciar con el ID de la cuenta de AWS
+    AWS_ACCOUNT_ID: "WHICH_ACCOUNT_ID"
     IMAGE_REPO_NAME: blacklists-api
 
 phases:
