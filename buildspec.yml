@@ -2,37 +2,36 @@ version: 0.2
 
 env:
   variables:
-    AWS_DEFAULT_REGION: "us-east-1"
+    AWS_DEFAULT_REGION: us-east-1
     AWS_ACCOUNT_ID: "635858937828"
-    IMAGE_REPO_NAME: "blacklists-api"
-    IMAGE_TAG: "latest"
+    IMAGE_REPO_NAME: blacklists-api
+    IMAGE_TAG: latest
 
 phases:
   install:
     runtime-versions:
       python: 3.11
     commands:
-      - echo "== SOURCE STAGE =="
-      - echo "Codigo fuente en: $CODEBUILD_SRC_DIR"
-      - python --version
-      - pip install --upgrade pip
-      - pip install -r requirements.txt
+      - 'echo "SOURCE STAGE"'
+      - 'echo "$CODEBUILD_SRC_DIR"'
+      - 'python --version'
+      - 'pip install --upgrade pip'
+      - 'pip install -r requirements.txt'
 
   pre_build:
     commands:
-      - echo "== TEST STAGE =="
-      - pytest tests/ -v
-      - echo "== LOGIN ECR =="
-      - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com"
+      - 'echo "TEST STAGE"'
+      - 'pytest tests/ -v'
+      - 'echo "LOGIN ECR"'
+      - 'aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com"'
 
   build:
     commands:
-      - echo "== BUILD STAGE =="
-      - docker build -t "$IMAGE_REPO_NAME" .
-      - docker tag "$IMAGE_REPO_NAME:$IMAGE_TAG" "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG"
+      - 'echo "BUILD STAGE"'
+      - 'docker build -t "$IMAGE_REPO_NAME" .'
+      - 'docker tag "$IMAGE_REPO_NAME:$IMAGE_TAG" "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG"'
 
   post_build:
     commands:
-      - echo "== PUSH STAGE =="
-      - docker push "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG"
-      - echo "Imagen publicada correctamente"
+      - 'echo "PUSH STAGE"'
+      - 'docker push "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG"'
