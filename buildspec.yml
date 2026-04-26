@@ -5,33 +5,38 @@ env:
     AWS_DEFAULT_REGION: us-east-1
     AWS_ACCOUNT_ID: "635858937828"
     IMAGE_REPO_NAME: blacklists-api
-    IMAGE_TAG: latest
 
 phases:
   install:
     runtime-versions:
       python: 3.11
     commands:
-      - 'echo "SOURCE STAGE"'
-      - 'echo "$CODEBUILD_SRC_DIR"'
-      - 'python --version'
-      - 'pip install --upgrade pip'
-      - 'pip install -r requirements.txt'
+      - echo "SOURCE STAGE"
+      - python --version
+      - pip install --upgrade pip
+      - pip install -r requirements.txt
 
   pre_build:
     commands:
-      - 'echo "TEST STAGE"'
-      - 'pytest tests/ -v'
-      - 'echo "LOGIN ECR"'
-      - 'aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com"'
+      - echo "TEST STAGE"
+      - pytest tests/ -v
+      - echo "LOGIN ECR"
+      - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com"
+      - COMMIT_TAG="${CODEBUILD_RESOLVED_SOURCE_VERSION}"
+      - SHORT_COMMIT_TAG="$(echo "$COMMIT_TAG" | cut -c 1-7)"
+      - IMAGE_URI="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME"
+      - echo "Tag commit: $SHORT_COMMIT_TAG"
 
   build:
     commands:
-      - 'echo "BUILD STAGE"'
-      - 'docker build -t "$IMAGE_REPO_NAME" .'
-      - 'docker tag "$IMAGE_REPO_NAME:$IMAGE_TAG" "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG"'
+      - echo "BUILD STAGE"
+      - docker build -t "$IMAGE_REPO_NAME:latest" .
+      - docker tag "$IMAGE_REPO_NAME:latest" "$IMAGE_URI:latest"
+      - docker tag "$IMAGE_REPO_NAME:latest" "$IMAGE_URI:$SHORT_COMMIT_TAG"
 
   post_build:
     commands:
-      - 'echo "PUSH STAGE"'
-      - 'docker push "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG"'
+      - echo "PUSH STAGE"
+      - docker push "$IMAGE_URI:latest"
+      - docker push "$IMAGE_URI:$SHORT_COMMIT_TAG"
+      - echo "Imagenes publicadas: latest y $SHORT_COMMIT_TAG"
