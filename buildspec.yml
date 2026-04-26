@@ -11,32 +11,35 @@ phases:
     runtime-versions:
       python: 3.11
     commands:
-      - 'echo "SOURCE STAGE"'
-      - 'python --version'
+      - 'echo "Instalando dependencias..."'
       - 'pip install --upgrade pip'
       - 'pip install -r requirements.txt'
 
   pre_build:
     commands:
-      - 'echo "TEST STAGE"'
+      - 'echo "Ejecutando Pruebas Unitarias..."'
       - 'pytest tests/ -v'
-      - 'echo "LOGIN ECR"'
+      - 'echo "Autenticando en Amazon ECR..."'
       - 'aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com"'
-      - 'COMMIT_TAG="${CODEBUILD_RESOLVED_SOURCE_VERSION}"'
-      - 'SHORT_COMMIT_TAG="$(echo "$COMMIT_TAG" | cut -c 1-7)"'
-      - 'IMAGE_URI="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME"'
-      - 'echo "Tag commit $SHORT_COMMIT_TAG"'
+      
+      # USAMOS EXPORT PARA QUE PERSISTAN LAS VARIABLES
+      - 'export SHORT_COMMIT_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)'
+      - 'export IMAGE_URI="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME"'
+      
+      - 'echo "Tag del commit: $SHORT_COMMIT_TAG"'
+      - 'echo "URI de la imagen: $IMAGE_URI"'
 
   build:
     commands:
-      - 'echo "BUILD STAGE"'
+      - 'echo "Construyendo imagen Docker..."'
       - 'docker build -t "$IMAGE_REPO_NAME:latest" .'
+      - 'echo "Etiquetando imagen..."'
       - 'docker tag "$IMAGE_REPO_NAME:latest" "$IMAGE_URI:latest"'
       - 'docker tag "$IMAGE_REPO_NAME:latest" "$IMAGE_URI:$SHORT_COMMIT_TAG"'
 
   post_build:
     commands:
-      - 'echo "PUSH STAGE"'
+      - 'echo "Subiendo imágenes a ECR..."'
       - 'docker push "$IMAGE_URI:latest"'
       - 'docker push "$IMAGE_URI:$SHORT_COMMIT_TAG"'
-      - 'echo "Imagenes publicadas latest y $SHORT_COMMIT_TAG"'
+      - 'echo "Despliegue de artefactos terminado: latest y $SHORT_COMMIT_TAG"'
