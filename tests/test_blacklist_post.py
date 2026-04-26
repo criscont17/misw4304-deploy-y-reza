@@ -40,7 +40,7 @@ def test_post_blacklist_duplicate_400(client, auth_headers, valid_body):
     with patch("app.api.blacklist_resources._service") as mock_svc:
         mock_svc.add_email.return_value = (
             {"message": "El email ya se encuentra en la lista negra"},
-            400,
+            500,
         )
         resp = client.post(
             "/blacklists",
