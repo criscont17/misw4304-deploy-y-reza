@@ -1,6 +1,6 @@
 # Blacklist API — lista negra global de emails
 
-**misw4304-deploy-y-reza** es un microservicio REST para registrar y consultar emails en una lista negra global. Está pensado para el curso **MISO / DevOps**, con despliegue manual en **AWS** (Elastic Beanstalk) y persistencia en **PostgreSQL**.
+**misw4304-deploy-y-reza** es un microservicio REST para registrar y consultar emails en una lista negra global. Está pensado para el curso **MISO / DevOps**, con despliegue en **AWS** (Elastic Beanstalk) y persistencia en **PostgreSQL**.
 
 **Stack:** Python 3.8+, Flask 3.x, Flask-RESTful, SQLAlchemy, Marshmallow, autenticación **Bearer** (token estático opcional o JWT). Las versiones concretas están en `requirements.txt`.
 
@@ -55,11 +55,24 @@ Comando de referencia si usas Gunicorn manualmente:
 gunicorn -w 4 -b 0.0.0.0:8000 wsgi:app
 ```
 
+## CI/CD en AWS (resumen)
+
+El flujo automatizado recomendado para este repositorio es:
+
+`CodePipeline -> CodeBuild -> Amazon ECR -> Elastic Beanstalk`
+
+- **CodeBuild** usa `buildspec.yml` para ejecutar pruebas (`pytest`), construir imagen Docker y publicarla en ECR.
+- **ECR** almacena las imagenes con tags `latest` y hash corto de commit.
+- **Elastic Beanstalk** despliega la imagen publicada usando `Dockerrun.aws.json`.
+
+Guia detallada: **[docs/continuous-integration.md](docs/continuous-integration.md)**.
+
 ## Documentación en `docs/`
 
 | Recurso | Descripción |
 |---------|-------------|
 | [docs/elastic-beanstalk.md](docs/elastic-beanstalk.md) | Elastic Beanstalk, variables de entorno y autenticación Bearer (estático / JWT) |
+| [docs/continuous-integration.md](docs/continuous-integration.md) | Integracion continua y despliegue en AWS con ECR, CodeBuild, CodePipeline y Elastic Beanstalk |
 | Colección Postman (`docs/blacklist-api.postman_collection.json`) | Requests de ejemplo, variable `token` por defecto alineada con el Bearer estático |
 
 ## API (resumen)
