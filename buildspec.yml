@@ -3,44 +3,58 @@ version: 0.2
 env:
   variables:
     AWS_DEFAULT_REGION: us-east-1
-    # Diligenciar con el ID de la cuenta de AWS
-    AWS_ACCOUNT_ID: "WHICH_ACCOUNT_ID"
-    IMAGE_REPO_NAME: blacklists-api
+    AWS_ACCOUNT_ID: "635858937828"
+    IMAGE_REPO_NAME: blacklist_api
+    CONTAINER_NAME: blacklist-api
 
 phases:
   install:
     runtime-versions:
       python: 3.11
     commands:
-      - 'echo "Instalando dependencias..."'
-      - 'pip install --upgrade pip'
-      - 'pip install -r requirements.txt'
+      - echo "Instalando dependencias..."
+      - pip install --upgrade pip
+      - pip install -r requirements.txt
 
   pre_build:
     commands:
-      - 'echo "Ejecutando Pruebas Unitarias..."'
-      - 'pytest tests/ -v'
-      - 'echo "Autenticando en Amazon ECR..."'
-      - 'aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com"'
-      
-      # USAMOS EXPORT PARA QUE PERSISTAN LAS VARIABLES
-      - 'export SHORT_COMMIT_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)'
-      - 'export IMAGE_URI="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME"'
-      
-      - 'echo "Tag del commit: $SHORT_COMMIT_TAG"'
-      - 'echo "URI de la imagen: $IMAGE_URI"'
+      - echo "Ejecutando Pruebas Unitarias..."
+      - pytest tests/ -v
+      - echo "Autenticando en Amazon ECR..."
+      - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com"
 
   build:
     commands:
-      - 'echo "Construyendo imagen Docker..."'
-      - 'docker build -t "$IMAGE_REPO_NAME:latest" .'
-      - 'echo "Etiquetando imagen..."'
-      - 'docker tag "$IMAGE_REPO_NAME:latest" "$IMAGE_URI:latest"'
-      - 'docker tag "$IMAGE_REPO_NAME:latest" "$IMAGE_URI:$SHORT_COMMIT_TAG"'
+      - |
+        SHORT_COMMIT_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+        IMAGE_URI="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME"
+        echo "Tag del commit: $SHORT_COMMIT_TAG"
+        echo "URI de la imagen: $IMAGE_URI"
+        echo "Construyendo imagen Docker..."
+        docker build -t "$IMAGE_REPO_NAME:latest" .
+        docker tag "$IMAGE_REPO_NAME:latest" "$IMAGE_URI:latest"
+        docker tag "$IMAGE_REPO_NAME:latest" "$IMAGE_URI:$SHORT_COMMIT_TAG"
+        echo "$SHORT_COMMIT_TAG" > .short_commit_tag
+        echo "$IMAGE_URI" > .image_uri
 
   post_build:
     commands:
-      - 'echo "Subiendo imágenes a ECR..."'
-      - 'docker push "$IMAGE_URI:latest"'
-      - 'docker push "$IMAGE_URI:$SHORT_COMMIT_TAG"'
-      - 'echo "Despliegue de artefactos terminado: latest y $SHORT_COMMIT_TAG"'
+      - |
+        SHORT_COMMIT_TAG=$(cat .short_commit_tag)
+        IMAGE_URI=$(cat .image_uri)
+        echo "Subiendo imágenes a ECR..."
+        docker push "$IMAGE_URI:latest"
+        docker push "$IMAGE_URI:$SHORT_COMMIT_TAG"
+        echo "Generando archivos de artefactos..."
+        printf '[{"name":"%s","imageUri":"%s"}]' "$CONTAINER_NAME" "$IMAGE_URI:$SHORT_COMMIT_TAG" > imagedefinitions.json
+        printf '{"ImageURI":"%s"}' "$IMAGE_URI:$SHORT_COMMIT_TAG" > imageDetail.json
+        sed "s|<IMAGE_URI>|$IMAGE_URI:$SHORT_COMMIT_TAG|g" taskdef.json > taskdef_filled.json
+        mv taskdef_filled.json taskdef.json
+        echo "Despliegue de artefactos terminado: latest y $SHORT_COMMIT_TAG"
+
+artifacts:
+  files:
+    - imagedefinitions.json
+    - imageDetail.json
+    - appspec.json
+    - taskdef.json

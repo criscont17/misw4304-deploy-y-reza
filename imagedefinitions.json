@@ -1,0 +1,6 @@
+[
+  {
+    "name": "blacklist-api",
+    "imageUri": "635858937828.dkr.ecr.us-east-1.amazonaws.com/blacklist_api:latest"
+  }
+]
