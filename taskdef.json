@@ -20,7 +20,7 @@
       "environment": [
         {
           "name": "DATABASE_URL",
-          "value": "postgresql://postgres:wrongpassword@blacklist-db.cmhg4k0c0go1.us-east-1.rds.amazonaws.com:5432/blacklist_db"
+          "value": "postgresql://postgres:postgres123@blacklist-db.cmhg4k0c0go1.us-east-1.rds.amazonaws.com:5432/blacklist_db"
         }
       ],
       "logConfiguration": {
