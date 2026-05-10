@@ -13,7 +13,7 @@ def test_get_blacklist_listed_200(client, auth_headers):
             "/blacklists/fraude@ejemplo.com",
             headers=auth_headers,
         )
-    assert resp.status_code == 200
+    assert resp.status_code == 999 #Aqui inserte un error deliberado cambiando del status 200 a 999
     assert resp.get_json() == {"blacklisted": True, "blocked_reason": "Fraude"}
     mock_svc.get_status.assert_called_once_with("fraude@ejemplo.com")
 
