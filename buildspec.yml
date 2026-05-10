@@ -48,7 +48,7 @@ phases:
         echo "Generando archivos de artefactos..."
         printf '[{"name":"%s","imageUri":"%s"}]' "$CONTAINER_NAME" "$IMAGE_URI:$SHORT_COMMIT_TAG" > imagedefinitions.json
         printf '{"ImageURI":"%s"}' "$IMAGE_URI:$SHORT_COMMIT_TAG" > imageDetail.json
-        sed "s|<IMAGE_URI>|$IMAGE_URI:$SHORT_COMMIT_TAG|g" taskdef.json > taskdef_filled.json
+        sed "s|<IMAGE1_NAME>|$IMAGE_URI:$SHORT_COMMIT_TAG|g" taskdef.json > taskdef_filled.json
         mv taskdef_filled.json taskdef.json
         echo "Despliegue de artefactos terminado: latest y $SHORT_COMMIT_TAG"
 
