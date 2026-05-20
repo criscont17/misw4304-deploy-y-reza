@@ -31,5 +31,16 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health').read()"
 
-# Arranque en producción
-CMD gunicorn -w 4 -b 0.0.0.0:$PORT wsgi:app
+## ==========================================
+## CONFIGURACIÓN DE NEW RELIC
+## ==========================================
+ENV NEW_RELIC_APP_NAME="blacklist-api-prod" \
+    NEW_RELIC_LOG="stdout" \
+    NEW_RELIC_LOG_LEVEL="info" \
+    NEW_RELIC_DISTRIBUTED_TRACING_ENABLED="true"
+
+# Envolvemos el arranque con el agente de New Relic
+ENTRYPOINT ["newrelic-admin", "run-program"]
+
+# Tu comando original de arranque ahora pasará a través del ENTRYPOINT
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "wsgi:app"]
