@@ -21,6 +21,10 @@
         {
           "name": "DATABASE_URL",
           "value": "postgresql://postgres:postgres123@blacklist-db.cmhg4k0c0go1.us-east-1.rds.amazonaws.com:5432/blacklist_db"
+        },
+        {
+          "name": "NEW_RELIC_LICENSE_KEY",
+          "value": "FD034501DDD660060F5118F5E1AA270047CA0EFE16585A90DCDD68F5D1D56244"
         }
       ],
       "logConfiguration": {
