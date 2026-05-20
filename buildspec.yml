@@ -5,7 +5,7 @@ env:
     AWS_DEFAULT_REGION: us-east-1
     AWS_ACCOUNT_ID: "635858937828"
     IMAGE_REPO_NAME: blacklist_api
-    CONTAINER_NAME: blacklist-api
+    CONTAINER_NAME: joy-api
 
 phases:
   install:
