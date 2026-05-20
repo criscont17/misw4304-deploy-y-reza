@@ -1,5 +1,5 @@
 # Imagen base ligera y estable
-FROM python:3.11-slim
+FROM public.ecr.aws/docker/library/python:3.11-slim
 
 # Buenas prácticas de Python en contenedor
 ENV PYTHONDONTWRITEBYTECODE=1 \
