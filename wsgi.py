@@ -1,5 +1,8 @@
 """Punto de entrada WSGI para Gunicorn y AWS Elastic Beanstalk."""
 
+import newrelic.agent
+newrelic.agent.initialize()
+
 from app import create_app
 
 app = create_app()

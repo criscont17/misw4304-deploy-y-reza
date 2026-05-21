@@ -25,6 +25,10 @@
         {
           "name": "NEW_RELIC_LICENSE_KEY",
           "value": "FD034501DDD660060F5118F5E1AA270047CA0EFE16585A90DCDD68F5D1D56244"
+        },
+        {
+          "name": "NEW_RELIC_APP_NAME",
+          "value": "joy-blacklist-api"
         }
       ],
       "logConfiguration": {
